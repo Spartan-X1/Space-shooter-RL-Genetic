@@ -1,0 +1,17 @@
+{
+  "session_id": "20250413_031758",
+  "start_time": "2025-04-13 03:17:58",
+  "device": "cuda",
+  "training_config": {
+    "episodes": 800,
+    "batch_size": 64,
+    "max_steps": 10000,
+    "wave_type": "normal",
+    "modular_training": true,
+    "save_interval": 10
+  },
+  "end_time": "2025-04-13 08:56:38",
+  "total_episodes": 800,
+  "final_score": 200,
+  "final_wave": 1
+}

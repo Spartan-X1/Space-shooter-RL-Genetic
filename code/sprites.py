@@ -1,8 +1,6 @@
 from settings import * 
-from math import sin, sqrt, atan2, degrees,cos,radians,inf
-from random import randint, uniform, random
-from math import sin, cos, radians, degrees, atan2, sqrt
-from random import uniform, random
+from math import sin, sqrt, atan2, degrees,cos,radians,inf,sin, cos, radians, degrees, atan2, sqrt
+import random 
 
 class Sprite:
     def __init__(self, texture, pos, speed, direction):
@@ -45,65 +43,85 @@ class Sprite:
 
     def draw(self):
         draw_texture_v(self.texture, self.pos, WHITE)
-
 class Player(Sprite):
-    def __init__(self, texture, pos, shoot_laser):
+    def __init__(self, texture, pos, shoot_laser, game=None):
         super().__init__(texture, pos, PLAYER_SPEED, Vector2())
+        self.game = game
         self.shoot_laser = shoot_laser
-        self.health = 15  # Start with 5 health points
-        self.invulnerable = False  # Flag for temporary invulnerability
-        self.invulnerable_timer = 0  # Timer for invulnerability period
-        self.flash_timer = 0  # For visual flashing when hit
-        self.visible = True  # Control visibility during flashing
-        
-        #Add rotation properties 
+        self.health = 20
+        self.max_health = 20
         self.rotation = 0
-        self.rotation_speed = 150  # Degrees per second
-        self.rect = Rectangle(0, 0, self.size.x, self.size.y) # Source rectangle for drawing
-        self.rotate_direction =0 # Direction of rotation (-1 for A, 1 for S, 0 for neither)
-
-         # Add visual offset like in the enemy class
-        self.draw_offset = Vector2(50, 40)  # Adjust these values as needed
-
-        # Track center position separately from render position
+        self.rotation_speed = 150
+        self.rect = Rectangle(0, 0, self.size.x, self.size.y)
+        self.rotate_direction = 0
+        self.draw_offset = Vector2(50, 40)
         self.center_pos = Vector2(
             self.pos.x + texture.width/2,
             self.pos.y + texture.height/2
         )
-        self.weapons = []  # Will be set by Game class
+        self.weapons = []
         self.current_weapon_index = 0
+        self.collision_radius = min(texture.width, texture.height) / 3
+        
+        # Keep these for code compatibility but no actual invulnerability
+        self.invulnerable = False
+        self.invulnerable_timer = 0
+        self.flash_timer = 0
+        self.visible = True
+
     def take_damage(self):
-        if not self.invulnerable:
-            self.health -= 1
-            self.invulnerable = True  # Become invulnerable after being hit
-            self.invulnerable_timer = 0  # Reset timer
-            return True  # Damage was applied
-        return False  # No damage was applied (invulnerable)
-    
+        # Decrease health immediately
+        self.health -= 1
+        
+        # Check for death
+        if self.health <= 0:
+            if self.game:
+                self.game.game_over = True
+        
+        # Return true to indicate hit happened
+        return True
+        
     def constraint(self):
         # Keep the player within the screen boundaries
-        min_x = 0 - self.draw_offset.x  # Allow the player to move off-screen by offset amount
+        min_x = 0 - self.draw_offset.x
         min_y = 0 - self.draw_offset.y
         max_x = WINDOW_WIDTH - self.size.x - self.draw_offset.x
         max_y = WINDOW_HEIGHT - self.size.y - self.draw_offset.y
-        
         self.pos.x = max(min_x, min(self.pos.x, max_x))
         self.pos.y = max(min_y, min(self.pos.y, max_y))
-        
         # Update center position
         self.center_pos.x = self.pos.x + self.size.x/2
         self.center_pos.y = self.pos.y + self.size.y/2
 
     def move(self, dt):
-        # Override move method to properly update center_pos
+        # Log before movement
+        initial_pos = Vector2(self.center_pos.x, self.center_pos.y)
+        
+        # Original movement code
         self.pos.x += self.direction.x * self.speed * dt
         self.pos.y += self.direction.y * self.speed * dt
         
         # Update center position
         self.center_pos.x = self.pos.x + self.size.x/2
         self.center_pos.y = self.pos.y + self.size.y/2
+        
+        # Log after movement
+        final_pos = Vector2(self.center_pos.x, self.center_pos.y)
+        delta_x = final_pos.x - initial_pos.x
+        delta_y = final_pos.y - initial_pos.y
+        
+        # Check if we've moved as expected
+        expected_dx = self.direction.x * self.speed * dt
+        expected_dy = self.direction.y * self.speed * dt
+        
+        if hasattr(self.game, 'logger'):
+            self.game.logger.log_debug(f"Move: dt={dt:.4f}, dir=({self.direction.x:.2f},{self.direction.y:.2f}), " +
+                                    f"delta=({delta_x:.2f},{delta_y:.2f}), " +
+                                    f"expected=({expected_dx:.2f},{expected_dy:.2f})")
     
     def input(self):
+        # Store original direction
+        original_dir = Vector2(self.direction.x, self.direction.y)
         self.direction.x = int(is_key_down(KEY_RIGHT)) - int(is_key_down(KEY_LEFT))
         self.direction.y = int(is_key_down(KEY_DOWN)) - int(is_key_down(KEY_UP))
         self.direction = Vector2Normalize(self.direction)
@@ -117,6 +135,11 @@ class Player(Sprite):
             self.current_weapon_index = 1
         elif is_key_pressed(KEY_THREE) and len(self.weapons) > 2 and self.weapons[2].unlocked:
             self.current_weapon_index = 2
+        
+        # Log if direction changed
+        if original_dir.x != self.direction.x or original_dir.y != self.direction.y:
+            print(f"INPUT: direction changed from ({original_dir.x:.2f},{original_dir.y:.2f}) "
+                f"to ({self.direction.x:.2f},{self.direction.y:.2f})")
 
         if is_key_pressed(KEY_SPACE):
             self.fire_weapon()
@@ -167,17 +190,27 @@ class Player(Sprite):
         self.weapons[self.current_weapon_index].fire(laser_pos, laser_dir)
 
     def update(self, dt):
-        self.input()
+        # Add debug print
+        
+        # Move player based on current direction and speed
         self.move(dt)
         self.constraint()
-
-         # Apply rotation based on input and time delta
+        
+        # Apply rotation based on input and time delta
         self.rotation += self.rotate_direction * self.rotation_speed * dt
+        
+        # Normalize rotation to 0-360 range
+        while self.rotation >= 360:
+            self.rotation -= 360
+        while self.rotation < 0:
+            self.rotation += 360
+        
+        # Update weapons
         for weapon in self.weapons:
             weapon.update(dt)
         
         # Handle invulnerability period
-        if self.invulnerable:
+        if hasattr(self, 'invulnerable') and self.invulnerable:
             self.invulnerable_timer += dt
             self.flash_timer += dt
             
@@ -185,7 +218,7 @@ class Player(Sprite):
             if self.flash_timer >= 0.1:  # Flash every 0.1 seconds
                 self.visible = not self.visible
                 self.flash_timer = 0
-            
+                
             # End invulnerability after 2 seconds
             if self.invulnerable_timer >= 2.0:
                 self.invulnerable = False
@@ -248,7 +281,7 @@ class Meteor(Sprite):
     def __init__(self, texture):
         pos = Vector2(randint(0, WINDOW_WIDTH), randint(-150,-50))
         speed = randint(*METEOR_SPEED_RANGE)
-        direction = Vector2(uniform(-0.5, 0.5),1)
+        direction = Vector2(random.uniform(-0.5, 0.5),1)
         super().__init__(texture, pos, speed, direction)
         self.rotation = 0
         self.rect = Rectangle(0, 0, self.size.x, self.size.y)
@@ -273,9 +306,9 @@ class ExplosionAnimation:
         self.discard = False
 
     def update(self, dt):
-        if self.index < len(self.textures) - 1:
-            self.index += 20 * dt
-        else:
+        self.index += 20 * dt
+        if self.index >= len(self.textures) - 1:
+            self.index = len(self.textures) - 1  # Clamp to last valid index
             self.discard = True
         
 
@@ -298,7 +331,7 @@ class Enemy(Sprite):
         ]
         
         # Choose one of the spawn areas, with higher probability for top area
-        r = random()
+        r = random.random()
         if r < 0.7:  # 70% chance for top spawn
             spawn_index = 0
         elif r < 0.85:  # 15% chance for left spawn
@@ -317,11 +350,11 @@ class Enemy(Sprite):
         # Base direction aims toward center with some randomness
         if length > 0:
             direction = Vector2(
-                dx/length + uniform(-0.3, 0.3),
-                dy/length + uniform(-0.3, 0.3)
+                dx/length + random.uniform(-0.3, 0.3),
+                dy/length + random.uniform(-0.3, 0.3)
             )
         else:
-            direction = Vector2(uniform(-0.3, 0.3), 1)
+            direction = Vector2(random.uniform(-0.3, 0.3), 1)
         
         # Call the parent constructor with these calculated values
         super().__init__(
@@ -348,7 +381,7 @@ class Enemy(Sprite):
         self.shoot_laser = shoot_laser
         self.enemy_laser_texture = enemy_laser_texture
         self.shoot_timer = 0
-        self.shoot_interval = uniform(0.8, 1.5)
+        self.shoot_interval = random.uniform(0.8, 1.5)
         
         # Movement/rotation properties
         self.movement_pattern = randint(0, 3)
@@ -462,7 +495,7 @@ class Enemy(Sprite):
         self.pos.y = self.center_pos.y - self.texture.height/2
         
         # Reset direction to head downward with slight randomness
-        self.direction = Vector2(uniform(-0.3, 0.3), 1)
+        self.direction = Vector2(random.uniform(-0.3, 0.3), 1)
         
         # Reset entered_screen flag
         self.entered_screen = False
@@ -478,7 +511,7 @@ class Enemy(Sprite):
         # Movement patterns
         if self.movement_pattern == 1:  # Zigzag
             if self.pattern_timer > 0.8:
-                self.direction.x = uniform(-0.7, 0.7)
+                self.direction.x = random.uniform(-0.7, 0.7)
                 self.pattern_timer = 0
         elif self.movement_pattern == 2:  # Swooping
             self.direction.x = sin(self.pattern_timer * 3) * 0.8
@@ -542,7 +575,7 @@ class Enemy(Sprite):
         if self.shoot_timer >= self.shoot_interval:
             self.fire_laser()
             self.shoot_timer = 0
-            self.shoot_interval = uniform(0.8, 1.5)
+            self.shoot_interval = random.uniform(0.8, 1.5)
 
     def update_rotation(self):
         player_pos = self.target_player.get_center()
@@ -693,12 +726,12 @@ class SwarmEnemy(Enemy):
         
         # More erratic zigzag with shorter intervals
         if self.pattern_timer > self.direction_change_interval:
-            self.direction.x = uniform(-0.9, 0.9)  # More extreme horizontal movement
+            self.direction.x = random.uniform(-0.9, 0.9)  # More extreme horizontal movement
             self.pattern_timer = 0
             
         # Random vertical speed changes
-        if random() < 0.02:  # 2% chance per frame to change vertical direction
-            self.direction.y = uniform(-0.5, 1.0)  # Occasionally move upward
+        if random.random() < 0.02:  # 2% chance per frame to change vertical direction
+            self.direction.y = random.uniform(-0.5, 1.0)  # Occasionally move upward
             
         # Update weapon cooldown
         self.weapon.update(dt)
@@ -1129,8 +1162,8 @@ class SwarmBlaster(EnemyWeapon):
         # Add some randomness to direction (inaccurate)
         spread = 0.1  # Amount of random spread
         random_dir = Vector2(
-            direction.x + uniform(-spread, spread),
-            direction.y + uniform(-spread, spread)
+            direction.x + random.uniform(-spread, spread),
+            direction.y + random.uniform(-spread, spread)
         )
         
         # Normalize the direction vector
