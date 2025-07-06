@@ -26,9 +26,8 @@ A sophisticated 2D space shooter game featuring advanced enemy AI, dynamic weapo
 
 ### Technical Highlights
 - **Collision Detection**: Optimized circle-rectangle collision systems
-- **Audio Engine**: Spatial audio with dynamic sound effects
+- **Audio Engine**: Raylib library
 - **Animation System**: Smooth sprite animations and explosion effects
-- **State Management**: Robust game state handling with pause/resume
 - **Performance Optimization**: Efficient sprite culling and memory management
 
 ## 🛠️ Technology Stack
@@ -89,14 +88,14 @@ code/
 ## 🏗️ Architecture Overview
 
 ### Core Systems
-- **Game Loop**: Fixed timestep with delta time calculations
+- **Game Loop**: Killing enemies in the current wave & surviving
 - **Entity Management**: Efficient sprite pooling and lifecycle management
 - **Physics**: Custom collision detection with spatial optimization
-- **Audio**: Multi-channel audio mixing with 3D spatial effects
+- **Audio**: Audio & Music dynamic play for each senario
 
 ### Advanced Features
-- **Wave Progression**: Adaptive difficulty scaling based on player performance
-- **Enemy AI**: State machines with pathfinding and player prediction
+- **Wave Progression**: Fixed progress mechanism for each wave.
+- **Enemy AI**: Smart constraint-based AI that combines movement patterns, boundary management, and player tracking to create emergent tactical behaviors
 - **Weapon Balance**: Carefully tuned damage, rate of fire, and cooldown systems
 - **Visual Effects**: Particle systems for explosions and projectile trails
 
