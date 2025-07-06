@@ -84,6 +84,8 @@ code/
 ## 🎨 Screenshots
 
 *[Add screenshots of gameplay, different enemy types, weapon effects, etc.]*
+![image](https://github.com/user-attachments/assets/049cabb0-28f6-49ee-ac95-240c352115b3)
+
 
 ## 🏗️ Architecture Overview
 
