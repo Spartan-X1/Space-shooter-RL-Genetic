@@ -99,6 +99,7 @@ ai/
 ### 🔥 Agent Performance
 ![Score](code/plot/Score.png)
 ![Duration](code/plot/Duration.png)
+![Progress](code/plot/Score_Progress.png)
 
 ---
 ## 🗺️ Roadmap
