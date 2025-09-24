@@ -81,7 +81,10 @@ ai/
 ```
 
 ---
-## 🎨 Screenshots
+## 🎨 RL GamePlay
+![Image_1](code/Gameplay_Images/Image_1.png)
+![Image_2](code/Gameplay_Images/Image_2.png)
+![Image_3](code/Gameplay_Images/Image_3.png)
 
 ---
 ## 📊 Training & Evolution Insights
