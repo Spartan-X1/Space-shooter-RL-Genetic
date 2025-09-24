@@ -98,6 +98,7 @@ ai/
 ## 📊 Training & Evaluation Results
 ### 🔥 Agent Performance
 ![Score](code/plot/Score.png)
+![Duration](code/plot/Duration.png)
 
 ---
 ## 🗺️ Roadmap
