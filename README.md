@@ -100,6 +100,9 @@ ai/
 ![Score](code/plot/Score.png)
 ![Duration](code/plot/Duration.png)
 ![Progress](code/plot/Score_Progress.png)
+![Learning](code/plot/Learning.png)
+![Training](code/plot/Training_Loss.png)
+![Q_value](code/plot/Q_value.png)
 
 ---
 ## 🗺️ Roadmap
