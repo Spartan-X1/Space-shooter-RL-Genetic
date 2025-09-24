@@ -96,8 +96,8 @@ ai/
 
 ---
 ## 📊 Training & Evaluation Results
-
-
+### 🔥 Agent Performance
+![Score](code/plot/Screenshot from 2025-09-24 19-55-01.png)
 ---
 ## 🗺️ Roadmap
 
